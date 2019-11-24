@@ -5,8 +5,6 @@
 #include <cstdint>
 #include <vector>
 
-namespace sgemm_cpu
-{
 class MatrixCPU
 {
 public:
@@ -19,6 +17,8 @@ public:
     float& value(std::size_t i, std::size_t j) noexcept;
     const float& value(std::size_t i, std::size_t j) const noexcept;
 
+    std::size_t size() const noexcept;
+
 private:
     std::size_t exponential_ceil(const std::size_t) const noexcept;
 
@@ -29,4 +29,3 @@ private:
     std::size_t stride_;
     std::vector<float> data_;
 };
-} // namespace sgemm_cpu

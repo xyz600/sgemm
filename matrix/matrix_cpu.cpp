@@ -3,8 +3,6 @@
 #include <algorithm>
 #include <cassert>
 
-namespace sgemm_cpu
-{
 std::size_t MatrixCPU::exponential_ceil(const std::size_t size) const noexcept { return (size + size - 1) / 2 * 2; }
 
 MatrixCPU::MatrixCPU(const std::size_t size)
@@ -40,4 +38,4 @@ float& MatrixCPU::value(std::size_t i, std::size_t j) noexcept { return data_[i 
 
 const float& MatrixCPU::value(std::size_t i, std::size_t j) const noexcept { return data_[i * stride_ + j]; }
 
-} // namespace sgemm_cpu
+std::size_t MatrixCPU::size() const noexcept { return size_; }
