@@ -19,6 +19,8 @@ public:
 
     std::size_t size() const noexcept;
 
+    const float* data() const noexcept;
+
 private:
     std::size_t exponential_ceil(const std::size_t) const noexcept;
 

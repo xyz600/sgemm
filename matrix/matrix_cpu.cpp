@@ -39,3 +39,5 @@ float& MatrixCPU::value(std::size_t i, std::size_t j) noexcept { return data_[i 
 const float& MatrixCPU::value(std::size_t i, std::size_t j) const noexcept { return data_[i * stride_ + j]; }
 
 std::size_t MatrixCPU::size() const noexcept { return size_; }
+
+const float* MatrixCPU::data() const noexcept { return data_.data(); }
