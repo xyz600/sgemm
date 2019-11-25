@@ -4,6 +4,7 @@
 #include <random>
 
 #include "matrix_cpu.hpp"
+#include "matrix_gpu.cuh"
 
 template <typename T> void prepare_input(T& matrix1, T& matrix2) { assert(false); }
 

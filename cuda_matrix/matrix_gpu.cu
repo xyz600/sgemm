@@ -2,7 +2,7 @@
 #include <cuda_runtime.h>
 
 #include "matrix_cpu.hpp"
-#include "matrix_gpu.hpp"
+#include "matrix_gpu.cuh"
 #include "sgemm_kernel.cuh"
 
 MatrixGPU::MatrixGPU(std::size_t size)
