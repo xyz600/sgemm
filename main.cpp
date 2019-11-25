@@ -1,5 +1,6 @@
 #include <cassert>
 #include <chrono>
+#include <cuda_runtime.h>
 #include <iostream>
 #include <random>
 
@@ -67,6 +68,8 @@ int main(int argc, char* argv[])
 
     const auto average_elapsed_gpu = experiment<MatrixGPU>(size, iteration);
     std::cout << "average gpu time: " << average_elapsed_gpu << "[us]" << std::endl;
+
+    cudaDeviceReset();
 
     return 0;
 }

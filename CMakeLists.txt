@@ -4,8 +4,8 @@ project(benchmark CXX)
 find_package(CUDA REQUIRED)
 
 set(CMAKE_CXX_COMPILER nvcc)
-# set(CMAKE_CXX_FLAGS "--generate-code arch=compute_61,code=sm_61")
 set(CUDA_HOST_COMPILER "clang++")
+set(CUDA_NVCC_FLAGS "--generate-code arch=compute_61,code=sm_61 --compiler-options -fPIC")
 
 add_subdirectory(matrix)
 add_subdirectory(cuda_matrix)
