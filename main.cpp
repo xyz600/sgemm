@@ -69,7 +69,7 @@ std::size_t experiment(const std::size_t size, const std::size_t iteration)
             {
                 const auto v1 = result1.value(i, j);
                 const auto v2 = result2.value(i, j);
-                if (abs(v1 - v2) / v1 > 1e-5)
+                if (abs(v1 - v2) / v1 > 1e-4)
                 {
                     std::cerr << v1 << ", " << v2 << std::endl;
                     std::cerr << "test failed..." << std::endl;

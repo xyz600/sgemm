@@ -48,13 +48,51 @@ void MatrixCPU::multiply_fast(const MatrixCPU& right, MatrixCPU& out) const noex
             {
                 for (std::size_t ii = i; ii < i + block_size; ii++)
                 {
+                    auto op = &out[ii * stride_ + j];
+                    auto o1 = _mm256_loadu_ps(op);
+                    auto o2 = _mm256_loadu_ps(op + 8);
+                    auto o3 = _mm256_loadu_ps(op + 16);
+                    auto o4 = _mm256_loadu_ps(op + 24);
+                    auto o5 = _mm256_loadu_ps(op + 32);
+                    auto o6 = _mm256_loadu_ps(op + 40);
+                    auto o7 = _mm256_loadu_ps(op + 48);
+                    auto o8 = _mm256_loadu_ps(op + 56);
+
                     for (std::size_t kk = k; kk < k + block_size; kk++)
                     {
-                        for (std::size_t jj = j; jj < j + block_size; jj++)
-                        {
-                            out[ii * stride_ + jj] += data_[ii * stride_ + kk] * right.data_[kk * stride_ + jj];
-                        }
+                        auto i1 = _mm256_set1_ps(data_[ii * stride_ + kk]);
+
+                        auto ip = &right.data_[kk * stride_ + j];
+
+                        auto i21 = _mm256_loadu_ps(ip);
+                        auto i22 = _mm256_loadu_ps(ip + 8);
+                        auto i23 = _mm256_loadu_ps(ip + 16);
+                        auto i24 = _mm256_loadu_ps(ip + 24);
+                        auto i25 = _mm256_loadu_ps(ip + 32);
+                        auto i26 = _mm256_loadu_ps(ip + 40);
+                        auto i27 = _mm256_loadu_ps(ip + 48);
+                        auto i28 = _mm256_loadu_ps(ip + 56);
+
+                        o1 = _mm256_fmadd_ps(i1, i21, o1);
+                        o2 = _mm256_fmadd_ps(i1, i22, o2);
+                        o3 = _mm256_fmadd_ps(i1, i23, o3);
+                        o4 = _mm256_fmadd_ps(i1, i24, o4);
+                        o5 = _mm256_fmadd_ps(i1, i25, o5);
+                        o6 = _mm256_fmadd_ps(i1, i26, o6);
+                        o7 = _mm256_fmadd_ps(i1, i27, o7);
+                        o8 = _mm256_fmadd_ps(i1, i28, o8);
                     }
+
+                    op = &out[ii * stride_ + j];
+
+                    _mm256_storeu_ps(op, o1);
+                    _mm256_storeu_ps(op + 8, o2);
+                    _mm256_storeu_ps(op + 16, o3);
+                    _mm256_storeu_ps(op + 24, o4);
+                    _mm256_storeu_ps(op + 32, o5);
+                    _mm256_storeu_ps(op + 40, o6);
+                    _mm256_storeu_ps(op + 48, o7);
+                    _mm256_storeu_ps(op + 56, o8);
                 }
             }
         }
