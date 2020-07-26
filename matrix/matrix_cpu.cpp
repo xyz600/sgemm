@@ -26,7 +26,7 @@ void MatrixCPU::multiply(const MatrixCPU& right, MatrixCPU& out) const noexcept
         {
             for (std::size_t k = 0; k < size_; k++)
             {
-                out[i * stride_ + j] += data_[i * stride_ + k] * data_[k * stride_ + j];
+                out[i * stride_ + j] += data_[i * stride_ + k] * right.data_[k * stride_ + j];
             }
         }
     }
