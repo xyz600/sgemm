@@ -1,5 +1,7 @@
 #include "matrix_cpu.hpp"
 
+#include <immintrin.h>
+#include <omp.h>
 #include <algorithm>
 #include <cassert>
 
@@ -35,6 +37,7 @@ void MatrixCPU::multiply_fast(const MatrixCPU& right, MatrixCPU& out) const noex
     assert(right.size_ == size_);
     assert(size_ == out.size_);
 
+#pragma omp parallel for
     for (std::size_t i = 0; i < size_; i++)
     {
         for (std::size_t k = 0; k < size_; k++)

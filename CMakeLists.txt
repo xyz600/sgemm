@@ -8,7 +8,7 @@ set(CMAKE_CXX_COMPILER clang++)
 # set(CUDA_HOST_COMPILER "clang++")
 # set(CUDA_NVCC_FLAGS "--generate-code arch=compute_61,code=sm_61 --compiler-options -fPIC")
 
-set(CMAKE_CXX_COMPILE_FEATURES "-Ofast -Werror -march=native")
+set(CMAKE_CXX_FLAGS "-Ofast -Werror -march=native -fopenmp")
 
 add_subdirectory(matrix)
 # add_subdirectory(cuda_matrix)

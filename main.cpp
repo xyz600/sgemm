@@ -51,19 +51,25 @@ std::size_t experiment(const std::size_t size, const std::size_t iteration)
     prepare_input(matrix1, matrix2);
 
     {
-        T result1(size);
-        T result2(size);
+        constexpr std::size_t small_size = 128;
+        // TEST
+        T m1(small_size);
+        T m2(small_size);
+        prepare_input(m1, m2);
 
-        matrix1.multiply(matrix2, result1);
-        matrix1.multiply_fast(matrix2, result2);
+        T result1(small_size);
+        T result2(small_size);
 
-        for (int i = 0; i < size; i++)
+        m1.multiply(m2, result1);
+        m1.multiply_fast(m2, result2);
+
+        for (int i = 0; i < small_size; i++)
         {
-            for (int j = 0; j < size; j++)
+            for (int j = 0; j < small_size; j++)
             {
                 const auto v1 = result1.value(i, j);
                 const auto v2 = result2.value(i, j);
-                assert(abs(v1 - v2) / v1 <= 1e-4);
+                assert(abs(v1 - v2) / v1 <= 1e-5);
             }
         }
         std::cerr << "test passed." << std::endl;
@@ -85,7 +91,7 @@ std::size_t experiment(const std::size_t size, const std::size_t iteration)
 
 int main(int argc, char* argv[])
 {
-    constexpr std::size_t size = 1024;
+    constexpr std::size_t size = 4096;
     constexpr std::size_t iteration = 10;
 
     const auto average_elapsed_cpu = experiment<MatrixCPU>(size, iteration);
