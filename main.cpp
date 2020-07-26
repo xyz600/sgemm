@@ -96,6 +96,11 @@ int main(int argc, char* argv[])
 
     const auto average_elapsed_cpu = experiment<MatrixCPU>(size, iteration);
     std::cout << "average cpu time: " << average_elapsed_cpu << "[us]" << std::endl;
+    const auto ideal_gflops = (4.3 * 8 * 12 * 2 * 1e9);
+    const auto gflops = static_cast<double>(size * size * size) / (average_elapsed_cpu * 1e-6);
+    std::cout << "Gflops: " << gflops << std::endl;
+    std::cout << "ideal Gflops: " << ideal_gflops << std::endl;
+    std::cout << "rate: " << (gflops / ideal_gflops) << std::endl;
 
     // const auto average_elapsed_gpu = experiment<MatrixGPU>(size, iteration);
     // std::cout << "average gpu time: " << average_elapsed_gpu << "[us]" << std::endl;
