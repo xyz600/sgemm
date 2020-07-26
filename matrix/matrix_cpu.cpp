@@ -46,53 +46,89 @@ void MatrixCPU::multiply_fast(const MatrixCPU& right, MatrixCPU& out) const noex
         {
             for (std::size_t j = 0; j < size_; j += block_size)
             {
-                for (std::size_t ii = i; ii < i + block_size; ii++)
+                for (std::size_t ii = i; ii < i + block_size; ii += 4)
                 {
-                    auto op = &out[ii * stride_ + j];
-                    auto o1 = _mm256_loadu_ps(op);
-                    auto o2 = _mm256_loadu_ps(op + 8);
-                    auto o3 = _mm256_loadu_ps(op + 16);
-                    auto o4 = _mm256_loadu_ps(op + 24);
-                    auto o5 = _mm256_loadu_ps(op + 32);
-                    auto o6 = _mm256_loadu_ps(op + 40);
-                    auto o7 = _mm256_loadu_ps(op + 48);
-                    auto o8 = _mm256_loadu_ps(op + 56);
-
-                    for (std::size_t kk = k; kk < k + block_size; kk++)
+                    for (std::size_t jj = j; jj < j + block_size; jj += 32)
                     {
-                        auto i1 = _mm256_set1_ps(data_[ii * stride_ + kk]);
+                        auto op = &out[ii * stride_ + jj];
+                        auto o1 = _mm256_loadu_ps(op);
+                        auto o2 = _mm256_loadu_ps(op + 8);
+                        auto o3 = _mm256_loadu_ps(op + 16);
+                        auto o4 = _mm256_loadu_ps(op + 24);
 
-                        auto ip = &right.data_[kk * stride_ + j];
+                        auto opn = &out[(ii + 1) * stride_ + jj];
+                        auto o1n = _mm256_loadu_ps(opn);
+                        auto o2n = _mm256_loadu_ps(opn + 8);
+                        auto o3n = _mm256_loadu_ps(opn + 16);
+                        auto o4n = _mm256_loadu_ps(opn + 24);
 
-                        auto i21 = _mm256_loadu_ps(ip);
-                        auto i22 = _mm256_loadu_ps(ip + 8);
-                        auto i23 = _mm256_loadu_ps(ip + 16);
-                        auto i24 = _mm256_loadu_ps(ip + 24);
-                        auto i25 = _mm256_loadu_ps(ip + 32);
-                        auto i26 = _mm256_loadu_ps(ip + 40);
-                        auto i27 = _mm256_loadu_ps(ip + 48);
-                        auto i28 = _mm256_loadu_ps(ip + 56);
+                        auto opn2 = &out[(ii + 2) * stride_ + jj];
+                        auto o1n2 = _mm256_loadu_ps(opn2);
+                        auto o2n2 = _mm256_loadu_ps(opn2 + 8);
+                        auto o3n2 = _mm256_loadu_ps(opn2 + 16);
+                        auto o4n2 = _mm256_loadu_ps(opn2 + 24);
 
-                        o1 = _mm256_fmadd_ps(i1, i21, o1);
-                        o2 = _mm256_fmadd_ps(i1, i22, o2);
-                        o3 = _mm256_fmadd_ps(i1, i23, o3);
-                        o4 = _mm256_fmadd_ps(i1, i24, o4);
-                        o5 = _mm256_fmadd_ps(i1, i25, o5);
-                        o6 = _mm256_fmadd_ps(i1, i26, o6);
-                        o7 = _mm256_fmadd_ps(i1, i27, o7);
-                        o8 = _mm256_fmadd_ps(i1, i28, o8);
+                        auto opn3 = &out[(ii + 3) * stride_ + jj];
+                        auto o1n3 = _mm256_loadu_ps(opn3);
+                        auto o2n3 = _mm256_loadu_ps(opn3 + 8);
+                        auto o3n3 = _mm256_loadu_ps(opn3 + 16);
+                        auto o4n3 = _mm256_loadu_ps(opn3 + 24);
+
+                        for (std::size_t kk = k; kk < k + block_size; kk++)
+                        {
+                            auto i1 = _mm256_set1_ps(data_[ii * stride_ + kk]);
+                            auto i1n = _mm256_set1_ps(data_[(ii + 1) * stride_ + kk]);
+                            auto i1n2 = _mm256_set1_ps(data_[(ii + 2) * stride_ + kk]);
+                            auto i1n3 = _mm256_set1_ps(data_[(ii + 3) * stride_ + kk]);
+
+                            auto ip = &right.data_[kk * stride_ + jj];
+
+                            auto i21 = _mm256_loadu_ps(ip);
+                            auto i22 = _mm256_loadu_ps(ip + 8);
+                            auto i23 = _mm256_loadu_ps(ip + 16);
+                            auto i24 = _mm256_loadu_ps(ip + 24);
+
+                            o1 = _mm256_fmadd_ps(i1, i21, o1);
+                            o2 = _mm256_fmadd_ps(i1, i22, o2);
+                            o3 = _mm256_fmadd_ps(i1, i23, o3);
+                            o4 = _mm256_fmadd_ps(i1, i24, o4);
+
+                            o1n = _mm256_fmadd_ps(i1n, i21, o1n);
+                            o2n = _mm256_fmadd_ps(i1n, i22, o2n);
+                            o3n = _mm256_fmadd_ps(i1n, i23, o3n);
+                            o4n = _mm256_fmadd_ps(i1n, i24, o4n);
+
+                            o1n2 = _mm256_fmadd_ps(i1n2, i21, o1n2);
+                            o2n2 = _mm256_fmadd_ps(i1n2, i22, o2n2);
+                            o3n2 = _mm256_fmadd_ps(i1n2, i23, o3n2);
+                            o4n2 = _mm256_fmadd_ps(i1n2, i24, o4n2);
+
+                            o1n3 = _mm256_fmadd_ps(i1n3, i21, o1n3);
+                            o2n3 = _mm256_fmadd_ps(i1n3, i22, o2n3);
+                            o3n3 = _mm256_fmadd_ps(i1n3, i23, o3n3);
+                            o4n3 = _mm256_fmadd_ps(i1n3, i24, o4n3);
+                        }
+
+                        _mm256_storeu_ps(op, o1);
+                        _mm256_storeu_ps(op + 8, o2);
+                        _mm256_storeu_ps(op + 16, o3);
+                        _mm256_storeu_ps(op + 24, o4);
+
+                        _mm256_storeu_ps(opn, o1n);
+                        _mm256_storeu_ps(opn + 8, o2n);
+                        _mm256_storeu_ps(opn + 16, o3n);
+                        _mm256_storeu_ps(opn + 24, o4n);
+
+                        _mm256_storeu_ps(opn2, o1n2);
+                        _mm256_storeu_ps(opn2 + 8, o2n2);
+                        _mm256_storeu_ps(opn2 + 16, o3n2);
+                        _mm256_storeu_ps(opn2 + 24, o4n2);
+
+                        _mm256_storeu_ps(opn3, o1n3);
+                        _mm256_storeu_ps(opn3 + 8, o2n3);
+                        _mm256_storeu_ps(opn3 + 16, o3n3);
+                        _mm256_storeu_ps(opn3 + 24, o4n3);
                     }
-
-                    op = &out[ii * stride_ + j];
-
-                    _mm256_storeu_ps(op, o1);
-                    _mm256_storeu_ps(op + 8, o2);
-                    _mm256_storeu_ps(op + 16, o3);
-                    _mm256_storeu_ps(op + 24, o4);
-                    _mm256_storeu_ps(op + 32, o5);
-                    _mm256_storeu_ps(op + 40, o6);
-                    _mm256_storeu_ps(op + 48, o7);
-                    _mm256_storeu_ps(op + 56, o8);
                 }
             }
         }
