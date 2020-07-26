@@ -12,6 +12,8 @@ public:
 
     void multiply(const MatrixCPU& right, MatrixCPU& out) const noexcept;
 
+    void multiply_fast(const MatrixCPU& right, MatrixCPU& out) const noexcept;
+
     void clear();
 
     float& value(std::size_t i, std::size_t j) noexcept;

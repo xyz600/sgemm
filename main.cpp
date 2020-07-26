@@ -1,15 +1,20 @@
+#include <cuda_runtime.h>
 #include <cassert>
 #include <chrono>
-#include <cuda_runtime.h>
 #include <iostream>
 #include <random>
 
 #include "matrix_cpu.hpp"
 // #include "matrix_gpu.cuh"
 
-template <typename T> void prepare_input(T& matrix1, T& matrix2) { assert(false); }
+template <typename T>
+void prepare_input(T& matrix1, T& matrix2)
+{
+    assert(false);
+}
 
-template <> void prepare_input(MatrixCPU& matrix1, MatrixCPU& matrix2)
+template <>
+void prepare_input(MatrixCPU& matrix1, MatrixCPU& matrix2)
 {
     assert(matrix1.size() == matrix2.size());
 
@@ -37,21 +42,41 @@ template <> void prepare_input(MatrixCPU& matrix1, MatrixCPU& matrix2)
 //     matrix2.copy_from(mat2);
 // }
 
-template <typename T> std::size_t experiment(const std::size_t size, const std::size_t iteration)
+template <typename T>
+std::size_t experiment(const std::size_t size, const std::size_t iteration)
 {
     T matrix1(size);
     T matrix2(size);
-    T result(size);
 
     prepare_input(matrix1, matrix2);
 
+    {
+        T result1(size);
+        T result2(size);
+
+        matrix1.multiply(matrix2, result1);
+        matrix1.multiply_fast(matrix2, result2);
+
+        for (int i = 0; i < size; i++)
+        {
+            for (int j = 0; j < size; j++)
+            {
+                const auto v1 = result1.value(i, j);
+                const auto v2 = result2.value(i, j);
+                assert(abs(v1 - v2) / v1 <= 1e-4);
+            }
+        }
+        std::cerr << "test passed." << std::endl;
+    }
+
+    T result(size);
     std::size_t elapsed = 0;
 
     for (std::size_t i = 0; i < iteration; i++)
     {
         result.clear();
         auto start = std::chrono::system_clock::now();
-        matrix1.multiply(matrix2, result);
+        matrix1.multiply_fast(matrix2, result);
         auto end = std::chrono::system_clock::now();
         elapsed += std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
     }

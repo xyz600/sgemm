@@ -5,9 +5,7 @@
 
 std::size_t MatrixCPU::exponential_ceil(const std::size_t size) const noexcept { return (size + size - 1) / 2 * 2; }
 
-MatrixCPU::MatrixCPU(const std::size_t size)
-    : size_(size)
-    , stride_(exponential_ceil(size))
+MatrixCPU::MatrixCPU(const std::size_t size) : size_(size), stride_(exponential_ceil(size))
 {
     data_.resize(size_ * stride_);
 }
@@ -25,6 +23,23 @@ void MatrixCPU::multiply(const MatrixCPU& right, MatrixCPU& out) const noexcept
         for (std::size_t j = 0; j < size_; j++)
         {
             for (std::size_t k = 0; k < size_; k++)
+            {
+                out[i * stride_ + j] += data_[i * stride_ + k] * data_[k * stride_ + j];
+            }
+        }
+    }
+}
+
+void MatrixCPU::multiply_fast(const MatrixCPU& right, MatrixCPU& out) const noexcept
+{
+    assert(right.size_ == size_);
+    assert(size_ == out.size_);
+
+    for (std::size_t i = 0; i < size_; i++)
+    {
+        for (std::size_t k = 0; k < size_; k++)
+        {
+            for (std::size_t j = 0; j < size_; j++)
             {
                 out[i * stride_ + j] += data_[i * stride_ + k] * data_[k * stride_ + j];
             }
