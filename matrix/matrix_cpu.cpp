@@ -32,22 +32,22 @@ void MatrixCPU::multiply(const MatrixCPU& right, MatrixCPU& out) const noexcept
     }
 }
 
-void MatrixCPU::kernel_4x16(const MatrixCPU& right, MatrixCPU& out, std::size_t ii, std::size_t jj,
+void MatrixCPU::kernel_4x16(const MatrixCPU& right, MatrixCPU& out, std::size_t ii, std::size_t j,
                             std::size_t k) const noexcept
 {
-    auto op = &out[ii * stride_ + jj];
+    auto op = &out[ii * stride_ + j];
     auto o1 = _mm256_loadu_ps(op);
     auto o2 = _mm256_loadu_ps(op + 8);
 
-    auto opn = &out[(ii + 1) * stride_ + jj];
+    auto opn = &out[(ii + 1) * stride_ + j];
     auto o1n = _mm256_loadu_ps(opn);
     auto o2n = _mm256_loadu_ps(opn + 8);
 
-    auto opn2 = &out[(ii + 2) * stride_ + jj];
+    auto opn2 = &out[(ii + 2) * stride_ + j];
     auto o1n2 = _mm256_loadu_ps(opn2);
     auto o2n2 = _mm256_loadu_ps(opn2 + 8);
 
-    auto opn3 = &out[(ii + 3) * stride_ + jj];
+    auto opn3 = &out[(ii + 3) * stride_ + j];
     auto o1n3 = _mm256_loadu_ps(opn3);
     auto o2n3 = _mm256_loadu_ps(opn3 + 8);
 
@@ -58,7 +58,7 @@ void MatrixCPU::kernel_4x16(const MatrixCPU& right, MatrixCPU& out, std::size_t 
         auto i1n2 = _mm256_set1_ps(data_[(ii + 2) * stride_ + kk]);
         auto i1n3 = _mm256_set1_ps(data_[(ii + 3) * stride_ + kk]);
 
-        auto ip = &right.data_[kk * stride_ + jj];
+        auto ip = &right.data_[kk * stride_ + j];
 
         auto i21 = _mm256_loadu_ps(ip);
         auto i22 = _mm256_loadu_ps(ip + 8);
@@ -89,32 +89,32 @@ void MatrixCPU::kernel_4x16(const MatrixCPU& right, MatrixCPU& out, std::size_t 
     _mm256_storeu_ps(opn3 + 8, o2n3);
 }
 
-void MatrixCPU::kernel_4x24(const MatrixCPU& right, MatrixCPU& out, std::size_t ii, std::size_t jj,
+void MatrixCPU::kernel_4x24(const MatrixCPU& right, MatrixCPU& out, std::size_t ii, std::size_t j,
                             std::size_t k) const noexcept
 {
-    auto op = &out[ii * stride_ + jj];
+    auto op = &out[ii * stride_ + j];
     auto o1 = _mm256_loadu_ps(op);
     auto o2 = _mm256_loadu_ps(op + 8);
     auto o3 = _mm256_loadu_ps(op + 16);
 
-    auto opn = &out[(ii + 1) * stride_ + jj];
+    auto opn = &out[(ii + 1) * stride_ + j];
     auto o1n = _mm256_loadu_ps(opn);
     auto o2n = _mm256_loadu_ps(opn + 8);
     auto o3n = _mm256_loadu_ps(opn + 16);
 
-    auto opn2 = &out[(ii + 2) * stride_ + jj];
+    auto opn2 = &out[(ii + 2) * stride_ + j];
     auto o1n2 = _mm256_loadu_ps(opn2);
     auto o2n2 = _mm256_loadu_ps(opn2 + 8);
     auto o3n2 = _mm256_loadu_ps(opn2 + 16);
 
-    auto opn3 = &out[(ii + 3) * stride_ + jj];
+    auto opn3 = &out[(ii + 3) * stride_ + j];
     auto o1n3 = _mm256_loadu_ps(opn3);
     auto o2n3 = _mm256_loadu_ps(opn3 + 8);
     auto o3n3 = _mm256_loadu_ps(opn3 + 16);
 
     for (std::size_t kk = k; kk < k + block_size; kk++)
     {
-        auto ip = &right.data_[kk * stride_ + jj];
+        auto ip = &right.data_[kk * stride_ + j];
         auto i21 = _mm256_loadu_ps(ip);
         auto i22 = _mm256_loadu_ps(ip + 8);
         auto i23 = _mm256_loadu_ps(ip + 16);
