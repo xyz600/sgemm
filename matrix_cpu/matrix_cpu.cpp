@@ -15,7 +15,7 @@ MatrixCPU::MatrixCPU(const std::size_t size) : size_(size), stride_(exponential_
 float& MatrixCPU::operator[](const std::size_t index) noexcept { return data_[index]; }
 const float& MatrixCPU::operator[](const std::size_t index) const noexcept { return data_[index]; }
 
-void MatrixCPU::multiply(const MatrixCPU& right, MatrixCPU& out) const noexcept
+void MatrixCPU::multiply_base(const MatrixCPU& right, MatrixCPU& out) const noexcept
 {
     assert(right.size_ == size_);
     assert(size_ == out.size_);
@@ -157,7 +157,7 @@ void MatrixCPU::kernel_4x24(const MatrixCPU& right, MatrixCPU& out, std::size_t 
     _mm256_storeu_ps(opn3 + 16, o3n3);
 }
 
-void MatrixCPU::multiply_fast(const MatrixCPU& right, MatrixCPU& out) const noexcept
+void MatrixCPU::multiply(const MatrixCPU& right, MatrixCPU& out) const noexcept
 {
     assert(right.size_ == size_);
     assert(size_ == out.size_);

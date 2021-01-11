@@ -12,7 +12,7 @@ public:
 
     void multiply(const MatrixCPU& right, MatrixCPU& out) const noexcept;
 
-    void multiply_fast(const MatrixCPU& right, MatrixCPU& out) const noexcept;
+    void multiply_base(const MatrixCPU& right, MatrixCPU& out) const noexcept;
 
     void clear();
 
