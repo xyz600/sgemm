@@ -1,3 +1,4 @@
+#include <cassert>
 #include <cstdio>
 #include "sgemm_kernel.cuh"
 
@@ -13,52 +14,72 @@ __global__ void fill(float* data, const int size, const float value)
 
 __global__ void sgemm(const float* a, const float* b, float* result, const int size, const int stride)
 {
-    // blockDim.x == 1024 を前提にしているコード
+    const int thread_idx = threadIdx.y * warpSize + threadIdx.x;
+    const int num_thread = blockDim.x * blockDim.y;
 
-    constexpr int block_size = 32;
+    constexpr int small_block_size = 2;
+    constexpr int block_size_x = 64;
 
-    const int block_per_size = (size / block_size);
-    const int num_block = block_per_size * block_per_size;
+    // thread 単位で small_balock_size^2 だけ要素を持っている時に確保できる block_size_y
+    const int block_size_y = num_thread * small_block_size * small_block_size / block_size_x;
+    assert(block_size_y <= block_size_x);
 
-    const int ii = threadIdx.x / block_size;
-    const int jj = threadIdx.x % block_size;
-
-    constexpr int block_k_size = 128;
-    __shared__ float temp_a[block_k_size][block_size], temp_b_t[block_k_size][block_size];
-
-    for (int block_idx = blockIdx.x; block_idx < num_block; block_idx += gridDim.x)
+    for (int i = blockIdx.y * block_size_y; i < size; i += gridDim.y * block_size_y)
     {
-        const int by = (block_idx / block_per_size) * block_size;
-        const int bx = (block_idx % block_per_size) * block_size;
-
-        const int i = by + ii;
-        const int j = bx + jj;
-        float* temp_result = &result[i * stride + j];
-
-        for (int block_k = 0; block_k < size; block_k += block_k_size)
+        for (int j = blockIdx.x * block_size_x; j < size; j += gridDim.x * block_size_x)
         {
-            // copy a & b from shared memory
-            {
-                const int k = threadIdx.x % block_k_size;
-                const auto* global_temp_a = a + block_k + k;
-                for (int ty = threadIdx.x / block_k_size; ty < block_size; ty += blockDim.x / block_k_size)
-                {
-                    temp_a[k][ty] = global_temp_a[(by + ty) * stride];
-                }
-            }
-            {
-                const int ty = threadIdx.x % block_size;
-                const auto* global_temp_b = b + bx + ty;
-                for (int k = threadIdx.x / block_size; k < block_k_size; k += blockDim.x / block_size)
-                {
-                    temp_b_t[k][ty] = global_temp_b[(block_k + k) * stride];
-                }
-            }
-            __syncthreads();
+            const int base_i = i + threadIdx.y * 2;
+            const int base_j = j + threadIdx.x * 2;
+            const bool has_result = (base_i < size && base_j < size);
 
-            for (int k = 0; k < block_k_size; k++)
+            // 単一スレッドの結果保存用
+            float local_result[small_block_size][small_block_size];
+            for (int ii = 0; ii < small_block_size; ii++)
             {
-                *temp_result += temp_a[k][ii] * temp_b_t[k][jj];
+                for (int jj = 0; jj < small_block_size; jj++)
+                {
+                    local_result[ii][jj] = 0;
+                }
+            }
+
+            const int height = min(block_size_y, size - i);
+            const int width = min(block_size_x, size - j);
+
+            for (int k = 0; k < size; k++)
+            {
+                __shared__ float temp_a[block_size_x], temp_b[block_size_x];
+                for (int l = thread_idx; l < height; l += num_thread)
+                {
+                    temp_a[l] = a[(i + l) * stride + k];
+                }
+                for (int l = thread_idx; l < width; l += num_thread)
+                {
+                    temp_b[l] = b[k * stride + (j + l)];
+                }
+                __syncthreads();
+
+                if (has_result)
+                {
+                    for (int ii = 0; ii < small_block_size; ii++)
+                    {
+                        for (int jj = 0; jj < small_block_size; jj++)
+                        {
+                            local_result[ii][jj] += temp_a[small_block_size * threadIdx.y + ii] *
+                                                    temp_b[small_block_size * threadIdx.x + jj];
+                        }
+                    }
+                }
+                __syncthreads();
+            }
+            if (has_result)
+            {
+                for (int ii = 0; ii < small_block_size; ii++)
+                {
+                    for (int jj = 0; jj < small_block_size; jj++)
+                    {
+                        result[(base_i + ii) * stride + (base_j + jj)] = local_result[ii][jj];
+                    }
+                }
             }
             __syncthreads();
         }

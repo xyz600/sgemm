@@ -5,7 +5,15 @@
 #include <algorithm>
 #include <cassert>
 
-std::size_t MatrixCPU::exponential_ceil(const std::size_t size) const noexcept { return (size + size - 1) / 2 * 2; }
+std::size_t MatrixCPU::exponential_ceil(const std::size_t size) const noexcept
+{
+    int ans = 1;
+    while (ans < size)
+    {
+        ans *= 2;
+    }
+    return ans;
+}
 
 MatrixCPU::MatrixCPU(const std::size_t size) : size_(size), stride_(exponential_ceil(size))
 {

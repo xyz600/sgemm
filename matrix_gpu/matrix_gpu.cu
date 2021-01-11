@@ -1,5 +1,6 @@
 #include <cuda_runtime.h>
 #include <cassert>
+#include <iostream>
 
 #include "matrix_cpu.hpp"
 #include "matrix_gpu.cuh"
@@ -25,13 +26,24 @@ MatrixGPU::MatrixGPU(int size) : size_(size), stride_(exponential_ceil(size_))
 
 MatrixGPU::~MatrixGPU() { cudaFree(data_); }
 
-std::size_t MatrixGPU::exponential_ceil(const int size) const noexcept { return (size + size - 1) / 2 * 2; }
+std::size_t MatrixGPU::exponential_ceil(const int size) const noexcept
+{
+    int ans = 1;
+    while (ans < size)
+    {
+        ans *= 2;
+    }
+    return ans;
+}
 
 void MatrixGPU::multiply(const MatrixGPU& right, MatrixGPU& out) const noexcept
 {
+    std::cerr << "thread: " << block_size_ << std::endl;
     assert(size_ == right.size_);
     assert(size_ == out.size_);
-    sgemm<<<grid_size_, block_size_>>>(data_, right.data_, out.data_, size_, stride_);
+    dim3 grid(8, grid_size_ / 8);
+    dim3 block(32, block_size_ / 32);
+    sgemm<<<grid, block>>>(data_, right.data_, out.data_, size_, stride_);
     CHECK(cudaGetLastError());
     CHECK(cudaDeviceSynchronize());
 }
