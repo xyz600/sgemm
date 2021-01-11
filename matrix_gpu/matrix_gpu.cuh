@@ -7,7 +7,7 @@ class MatrixCPU;
 class MatrixGPU
 {
 public:
-    MatrixGPU(std::size_t size);
+    MatrixGPU(int size);
 
     ~MatrixGPU();
 
@@ -22,11 +22,15 @@ public:
     std::size_t size() const noexcept;
 
 private:
-    std::size_t exponential_ceil(const std::size_t size) const noexcept;
+    std::size_t exponential_ceil(const int size) const noexcept;
 
     float* data_;
 
-    std::size_t size_;
+    int size_;
 
-    std::size_t stride_;
+    int stride_;
+
+    int grid_size_;
+
+    int block_size_;
 };
