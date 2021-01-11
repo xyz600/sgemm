@@ -25,7 +25,7 @@ __global__ void sgemm(const float* a, const float* b, float* result, const int s
     const int ii_size = blockDim.x / block_size;
 
     constexpr int block_k_size = 128;
-    __shared__ float temp_a[block_size][block_k_size], temp_b_t[block_size][block_k_size];
+    __shared__ float temp_a[block_k_size][block_size], temp_b_t[block_k_size][block_size];
 
     for (int block_idx = blockIdx.x; block_idx < num_block; block_idx += gridDim.x)
     {
@@ -43,15 +43,15 @@ __global__ void sgemm(const float* a, const float* b, float* result, const int s
                 const int k = threadIdx.x % block_k_size;
                 for (int ty = threadIdx.x / block_k_size; ty < block_size; ty += blockDim.x / block_k_size)
                 {
-                    temp_a[ty][k] = a[(by + ty) * stride + block_k + k];
-                    temp_b_t[ty][k] = b[(block_k + k) * stride + bx + ty];
+                    temp_a[k][ty] = a[(by + ty) * stride + block_k + k];
+                    temp_b_t[k][ty] = b[(block_k + k) * stride + bx + ty];
                 }
             }
             __syncthreads();
 
             for (int k = 0; k < block_k_size; k++)
             {
-                *temp_result += temp_a[ii][k] * temp_b_t[jj][k];
+                *temp_result += temp_a[k][ii] * temp_b_t[k][jj];
             }
             __syncthreads();
         }
