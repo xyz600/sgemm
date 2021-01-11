@@ -137,7 +137,7 @@ std::size_t experiment(const std::size_t size, const std::size_t iteration)
 
 int main(int argc, char* argv[])
 {
-    constexpr std::size_t size = 2048;
+    constexpr std::size_t size = 4096;
     constexpr std::size_t iteration = 10;
 
     const auto to_gflops = [&](std::size_t elapsed) {
