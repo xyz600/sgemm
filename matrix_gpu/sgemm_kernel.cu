@@ -22,7 +22,6 @@ __global__ void sgemm(const float* a, const float* b, float* result, const int s
 
     const int ii = threadIdx.x / block_size;
     const int jj = threadIdx.x % block_size;
-    const int ii_size = blockDim.x / block_size;
 
     constexpr int block_k_size = 128;
     __shared__ float temp_a[block_k_size][block_size], temp_b_t[block_k_size][block_size];
@@ -44,6 +43,12 @@ __global__ void sgemm(const float* a, const float* b, float* result, const int s
                 for (int ty = threadIdx.x / block_k_size; ty < block_size; ty += blockDim.x / block_k_size)
                 {
                     temp_a[k][ty] = a[(by + ty) * stride + block_k + k];
+                }
+            }
+            {
+                const int ty = threadIdx.x % block_size;
+                for (int k = threadIdx.x / block_size; k < block_k_size; k += blockDim.x / block_size)
+                {
                     temp_b_t[k][ty] = b[(block_k + k) * stride + bx + ty];
                 }
             }
