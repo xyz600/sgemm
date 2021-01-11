@@ -32,6 +32,8 @@ void MatrixGPU::multiply(const MatrixGPU& right, MatrixGPU& out) const noexcept
     assert(size_ == right.size_);
     assert(size_ == out.size_);
     sgemm<<<grid_size_, block_size_>>>(data_, right.data_, out.data_, size_, stride_);
+    CHECK(cudaGetLastError());
+    CHECK(cudaDeviceSynchronize());
 }
 
 void MatrixGPU::copy_from(const MatrixCPU& src) noexcept
@@ -44,6 +46,10 @@ void MatrixGPU::copy_to(MatrixCPU& dst) const noexcept
     CHECK(cudaMemcpy((void*)dst.data(), (void*)data_, sizeof(float) * stride_ * size_, cudaMemcpyDeviceToHost));
 }
 
-void MatrixGPU::clear() noexcept { fill<<<grid_size_, block_size_>>>(data_, size_, 0); }
+void MatrixGPU::clear() noexcept
+{
+    fill<<<grid_size_, block_size_>>>(data_, size_, 0);
+    cudaDeviceSynchronize();
+}
 
 std::size_t MatrixGPU::size() const noexcept { return size_; }

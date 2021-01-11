@@ -87,6 +87,9 @@ void check_gpu()
 
     MatrixGPU m1_dev(small_size);
     MatrixGPU m2_dev(small_size);
+    m1_dev.copy_from(m1);
+    m2_dev.copy_from(m2);
+
     MatrixGPU result_dev(small_size);
     m1_dev.multiply(m2_dev, result_dev);
 
