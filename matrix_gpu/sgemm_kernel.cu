@@ -40,16 +40,18 @@ __global__ void sgemm(const float* a, const float* b, float* result, const int s
             // copy a & b from shared memory
             {
                 const int k = threadIdx.x % block_k_size;
+                const auto* global_temp_a = a + block_k + k;
                 for (int ty = threadIdx.x / block_k_size; ty < block_size; ty += blockDim.x / block_k_size)
                 {
-                    temp_a[k][ty] = a[(by + ty) * stride + block_k + k];
+                    temp_a[k][ty] = global_temp_a[(by + ty) * stride];
                 }
             }
             {
                 const int ty = threadIdx.x % block_size;
+                const auto* global_temp_b = b + bx + ty;
                 for (int k = threadIdx.x / block_size; k < block_k_size; k += blockDim.x / block_size)
                 {
-                    temp_b_t[k][ty] = b[(block_k + k) * stride + bx + ty];
+                    temp_b_t[k][ty] = global_temp_b[(block_k + k) * stride];
                 }
             }
             __syncthreads();
