@@ -24,14 +24,17 @@ __global__ void sgemm(const float* a, const float* b, float* result, const int s
     const int block_size_y = num_thread * small_block_size * small_block_size / block_size_x;
     assert(block_size_y <= block_size_x);
 
-    constexpr int block_k_size = 32;
+    constexpr int block_k_size = 4;
+    const int k_lane_idx = thread_idx % block_k_size;
+    const int k_warp_idx = thread_idx / block_k_size;
+    const int k_warp_per_block = num_thread / block_k_size;
 
     for (int i = blockIdx.y * block_size_y; i < size; i += gridDim.y * block_size_y)
     {
         for (int j = blockIdx.x * block_size_x; j < size; j += gridDim.x * block_size_x)
         {
-            const int base_i = i + threadIdx.y * 2;
-            const int base_j = j + threadIdx.x * 2;
+            const int base_i = i + threadIdx.y * small_block_size;
+            const int base_j = j + threadIdx.x * small_block_size;
             const bool has_result = (base_i < size && base_j < size);
 
             // 単一スレッドの結果保存用
@@ -58,8 +61,8 @@ __global__ void sgemm(const float* a, const float* b, float* result, const int s
                     }
                 }
                 {
-                    const int kk = lane_idx;
-                    for (int l = warp_idx; l < height; l += warp_per_block)
+                    const int kk = k_lane_idx;
+                    for (int l = k_warp_idx; l < height; l += k_warp_per_block)
                     {
                         temp_a[kk][l] = a[(i + l) * stride + k + kk];
                     }
@@ -70,24 +73,27 @@ __global__ void sgemm(const float* a, const float* b, float* result, const int s
                 {
                     for (int kk = 0; kk < block_k_size; kk++)
                     {
-                        local_result[0][0] += temp_a[kk][small_block_size * threadIdx.y + 0] *
-                                              temp_b[kk][small_block_size * threadIdx.x + 0];
-                        local_result[0][1] += temp_a[kk][small_block_size * threadIdx.y + 0] *
-                                              temp_b[kk][small_block_size * threadIdx.x + 1];
-                        local_result[1][0] += temp_a[kk][small_block_size * threadIdx.y + 1] *
-                                              temp_b[kk][small_block_size * threadIdx.x + 0];
-                        local_result[1][1] += temp_a[kk][small_block_size * threadIdx.y + 1] *
-                                              temp_b[kk][small_block_size * threadIdx.x + 1];
+                        for (int ii = 0; ii < small_block_size; ii++)
+                        {
+                            for (int jj = 0; jj < small_block_size; jj++)
+                            {
+                                local_result[ii][jj] += temp_a[kk][small_block_size * threadIdx.y + ii] *
+                                                        temp_b[kk][small_block_size * threadIdx.x + jj];
+                            }
+                        }
                     }
                 }
                 __syncthreads();
             }
             if (has_result)
             {
-                result[base_i * stride + base_j] = local_result[0][0];
-                result[base_i * stride + (base_j + 1)] = local_result[0][1];
-                result[(base_i + 1) * stride + base_j] = local_result[1][0];
-                result[(base_i + 1) * stride + (base_j + 1)] = local_result[1][1];
+                for (int ii = 0; ii < small_block_size; ii++)
+                {
+                    for (int jj = 0; jj < small_block_size; jj++)
+                    {
+                        result[(base_i + ii) * stride + (base_j + jj)] = local_result[ii][jj];
+                    }
+                }
             }
             __syncthreads();
         }

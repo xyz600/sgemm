@@ -1,6 +1,6 @@
 #pragma once
 
-constexpr int small_block_size = 2;
+constexpr int small_block_size = 4;
 
 constexpr int block_size_x = 128;
 
