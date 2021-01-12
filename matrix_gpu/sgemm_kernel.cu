@@ -17,9 +17,6 @@ __global__ void sgemm(const float* a, const float* b, float* result, const int s
     const int thread_idx = threadIdx.y * warpSize + threadIdx.x;
     const int num_thread = blockDim.x * blockDim.y;
 
-    constexpr int small_block_size = 2;
-    constexpr int block_size_x = 64;
-
     // thread 単位で small_balock_size^2 だけ要素を持っている時に確保できる block_size_y
     const int block_size_y = num_thread * small_block_size * small_block_size / block_size_x;
     assert(block_size_y <= block_size_x);

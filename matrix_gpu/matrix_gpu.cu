@@ -38,11 +38,11 @@ std::size_t MatrixGPU::exponential_ceil(const int size) const noexcept
 
 void MatrixGPU::multiply(const MatrixGPU& right, MatrixGPU& out) const noexcept
 {
-    std::cerr << "thread: " << block_size_ << std::endl;
     assert(size_ == right.size_);
     assert(size_ == out.size_);
     dim3 grid(8, grid_size_ / 8);
-    dim3 block(32, block_size_ / 32);
+    constexpr int bs = block_size_x / small_block_size;
+    dim3 block(bs, block_size_ / bs);
     sgemm<<<grid, block>>>(data_, right.data_, out.data_, size_, stride_);
     CHECK(cudaGetLastError());
     CHECK(cudaDeviceSynchronize());
