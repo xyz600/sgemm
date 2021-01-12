@@ -49,7 +49,7 @@ __global__ void sgemm(const float* a, const float* b, float* result, const int s
 
             for (int k = 0; k < size; k += block_k_size)
             {
-                __shared__ float temp_a[block_k_size][block_size_x], temp_b[block_k_size][block_size_x];
+                __shared__ float temp_a[block_k_size][block_size_x + 1], temp_b[block_k_size][block_size_x + 1];
                 for (int kk = 0; kk < block_k_size; kk++)
                 {
                     for (int l = thread_idx; l < width; l += num_thread)
