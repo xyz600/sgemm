@@ -15,16 +15,13 @@ __global__ void fill(float* data, const int size, const float value)
 __global__ void sgemm(const float* a, const float* b, float* result, const int size, const int stride)
 {
     const int thread_idx = threadIdx.y * warpSize + threadIdx.x;
-    const int lane_idx = thread_idx % warpSize;
-    const int warp_idx = thread_idx / warpSize;
-    const int warp_per_block = blockDim.x / warpSize;
     const int num_thread = blockDim.x * blockDim.y;
 
     // thread 単位で small_balock_size^2 だけ要素を持っている時に確保できる block_size_y
     const int block_size_y = num_thread * small_block_size * small_block_size / block_size_x;
     assert(block_size_y <= block_size_x);
 
-    constexpr int block_k_size = 4;
+    constexpr int block_k_size = 16;
     const int k_lane_idx = thread_idx % block_k_size;
     const int k_warp_idx = thread_idx / block_k_size;
     const int k_warp_per_block = num_thread / block_k_size;
