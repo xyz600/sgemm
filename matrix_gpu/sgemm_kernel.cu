@@ -16,6 +16,8 @@ __global__ void sgemm(const float* a, const float* b, float* result, const int s
 {
     const int thread_idx = threadIdx.y * blockDim.x + threadIdx.x;
     const int num_thread = blockDim.x * blockDim.y;
+    const int large_ty = threadIdx.y * small_block_size;
+    const int large_tx = threadIdx.x * small_block_size;
 
     // thread 単位で small_balock_size^2 だけ要素を持っている時に確保できる block_size_y
     const int block_size_y = num_thread * small_block_size * small_block_size / block_size_x;
@@ -27,8 +29,7 @@ __global__ void sgemm(const float* a, const float* b, float* result, const int s
     {
         for (int j = blockIdx.x * block_size_x; j < size; j += gridDim.x * block_size_x)
         {
-            const bool has_result =
-                (i + threadIdx.y * small_block_size < size && j + threadIdx.x * small_block_size < size);
+            const bool has_result = (i + large_ty < size && j + large_tx < size);
 
             // 単一スレッドの結果保存用
             float local_result[small_block_size][small_block_size];
@@ -73,8 +74,7 @@ __global__ void sgemm(const float* a, const float* b, float* result, const int s
                         {
                             for (int jj = 0; jj < small_block_size; jj++)
                             {
-                                local_result[ii][jj] += temp_a[kk][small_block_size * threadIdx.y + ii] *
-                                                        temp_b[kk][small_block_size * threadIdx.x + jj];
+                                local_result[ii][jj] += temp_a[kk][large_ty + ii] * temp_b[kk][large_tx + jj];
                             }
                         }
                     }
@@ -87,8 +87,7 @@ __global__ void sgemm(const float* a, const float* b, float* result, const int s
                 {
                     for (int jj = 0; jj < small_block_size; jj++)
                     {
-                        result[(i + threadIdx.y * small_block_size + ii) * stride +
-                               (j + threadIdx.x * small_block_size + jj)] = local_result[ii][jj];
+                        result[(i + large_ty + ii) * stride + (j + large_tx + jj)] = local_result[ii][jj];
                     }
                 }
             }
