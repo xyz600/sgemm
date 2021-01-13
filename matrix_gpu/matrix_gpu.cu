@@ -43,7 +43,6 @@ void MatrixGPU::multiply(const MatrixGPU& right, MatrixGPU& out) const noexcept
     dim3 grid(8, grid_size_ / 8);
     constexpr int bs = block_size_x / small_block_size;
     dim3 block(bs, block_size_ / bs);
-    std::cerr << block_size_ << std::endl;
     sgemm<<<grid, block>>>(data_, right.data_, out.data_, size_, stride_);
     CHECK(cudaGetLastError());
     CHECK(cudaDeviceSynchronize());
